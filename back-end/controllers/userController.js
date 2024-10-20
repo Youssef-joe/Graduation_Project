@@ -1,6 +1,6 @@
 const User = require("./../models/userModel.js");
 const bcrypt = require("bcrypt");
-const jwt = require('jsonwebtoken')
+const jwt = require("jsonwebtoken");
 
 let register = async (req, res) => {
   try {
@@ -70,7 +70,7 @@ let login = async (req, res) => {
     }
 
     // Check the hashed password
-    const isMatch = await bcrypt.compare(password, user.hashedPass)
+    const isMatch = await bcrypt.compare(password, user.hashedPass);
 
     if (!isMatch) {
       return res.status(400).json({
@@ -96,29 +96,23 @@ let login = async (req, res) => {
   }
 };
 
-let user = async (req,res) => {
+let getUserData = async (req, res) => {
   try {
-    const {email} = req.body
-
-    const user = User.findOne({userEmail: email})
-    if (!email) {
-      throw new Error("this user isn't even exist");
+    const user = await User.findById(req.user.id).select("-password"); // Fetch user data except the password
+    if (!user) {
+      return res.status(404).json({
+        message: "user not found",
+      });
     }
-    
-
-    res.status(200).json({
-      message: 'user found',
-      data: user
-    })
-
-  } catch(er) {
-    console.error(er.message ? er.message : er);
-
+    res.json(user);
+  } catch (er) {
+    res.status(500).json({ message: "server error" });
+    console.error("fetching user data error: ", er.message ? er.message : er);
   }
-}
+};
 
 module.exports = {
   register,
   login,
-  user
+  getUserData,
 };
