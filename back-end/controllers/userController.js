@@ -1,118 +1,106 @@
-const User = require("./../models/userModel.js");
+// controllers/userController.js
+const User = require("../models/userModel.js");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-let register = async (req, res) => {
+// Register a new user
+const register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { username, userEmail, password } = req.body;
 
-    // Check if all fields are provided
-    if (!name || !email || !password) {
-      return res
-        .status(400)
-        .json({ message: "All fields are required to be filled" });
+    // Validate input fields
+    if (!username || !userEmail || !password) {
+      return res.status(400).json({ message: "All fields are required." });
     }
 
-    // Check if the user already exists
-    let oldUser = await User.findOne({ email });
-
+    // Check if user already exists
+    const oldUser = await User.findOne({ userEmail });
     if (oldUser) {
-      return res
-        .status(400)
-        .json({ message: "This email is already registered" });
+      return res.status(400).json({ message: "This email is already registered." });
     }
 
     // Hash the password
     const hashedPass = await bcrypt.hash(password, 10);
 
-    // Create a new user
-    let newUser = new User({
-      username: name,
-      userEmail: email,
-      hashedPass: hashedPass,
+    // Create new user
+    const newUser = new User({
+      username,
+      userEmail,
+      hashedPass,
     });
 
     // Save the user to the database
-    let savedUser = await newUser.save();
+    const savedUser = await newUser.save();
 
-    // Respond with success
+    // Return success response
     res.status(201).json({
-      message: "User has been registered successfully",
+      message: "User registered successfully.",
       data: savedUser,
     });
-  } catch (er) {
-    console.log(er.message ? er.message : er);
-    res.status(500).json({ message: "Server error" });
+  } catch (error) {
+    console.error("Registration error:", error);
+    res.status(500).json({ message: "Server error. Please try again later." });
   }
 };
 
-let login = async (req, res) => {
+// Login a user
+const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { userEmail, password } = req.body;
 
-    // Log the incoming request for debugging
-    console.log("Login attempt with:", { email, password });
-
-    if (!email || !password) {
-      return res.status(400).json({
-        message: "All Fields Are Required To Be Filled",
-      });
+    // Validate input fields
+    if (!userEmail || !password) {
+      return res.status(400).json({ message: "All fields are required." });
     }
 
     // Find the user by email
-    const user = await User.findOne({ userEmail: email });
-    console.log("Retrieved user:", user); // Add this line to check the user
-
+    const user = await User.findOne({ userEmail });
     if (!user) {
-      return res.status(400).json({
-        message: "Invalid email or password",
-      });
+      return res.status(400).json({ message: "Invalid email or password." });
     }
 
-    // Check the hashed password
+    // Compare passwords
     const isMatch = await bcrypt.compare(password, user.hashedPass);
-
     if (!isMatch) {
-      return res.status(400).json({
-        message: "Invalid email or password",
-      });
+      return res.status(400).json({ message: "Invalid email or password." });
     }
 
     // Generate JWT token
     const token = jwt.sign(
       { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || "default_secret",
       { expiresIn: "1h" }
     );
 
-    // Respond with success and token
-    res.status(200).json({ message: "Logged in successfully", token });
-  } catch (er) {
-    console.log(er.message ? er.message : er);
-    res.status(500).json({
-      message: "Failure",
-      data: er.message ? er.message : er,
+    // Return success response with token and user data
+    res.status(200).json({
+      message: "Logged in successfully.",
+      token,
+      user: {
+        id: user._id,
+        name: user.username,
+        email: user.userEmail,
+        role: user.role,
+      },
     });
+  } catch (error) {
+    console.error("Login error:", error.message || error);
+    res.status(500).json({ message: "Server error. Please try again later." });
   }
 };
 
-let getUserData = async (req, res) => {
+// Get user profile (excluding password)
+const getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("-password"); // Fetch user data except the password
+    const user = await User.findById(req.user.id).select("-hashedPass");
     if (!user) {
-      return res.status(404).json({
-        message: "user not found",
-      });
+      return res.status(404).json({ message: "User not found." });
     }
-    res.json(user);
-  } catch (er) {
-    res.status(500).json({ message: "server error" });
-    console.error("fetching user data error: ", er.message ? er.message : er);
+    res.status(200).json({ user });
+  } catch (error) {
+    console.error("Error fetching profile:", error);
+    res.status(500).json({ message: "Server error. Please try again later." });
   }
 };
 
-module.exports = {
-  register,
-  login,
-  getUserData,
-};
+module.exports = { register, login, getProfile };

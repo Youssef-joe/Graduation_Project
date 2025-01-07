@@ -6,17 +6,16 @@ const adminRoutes = require("./routes/adminRoutes.js");
 const PORT = 4000;
 const mongoURI = "mongodb://localhost:27017/bliss_rest";
 const cors = require("cors");
-const User = require('./models/userModel.js')
+const User = require("./models/userModel.js");
 
 require("dotenv").config();
 
+app.use(cors({
+  origin: "http://localhost:3000", // Allow requests from the frontend
+  credentials: true,
+}));
 
 
-app.use(
-  cors({
-    origin: "http://localhost:3000", // this allows requests from my Front-End which uses port 3000
-  })
-);
 
 app.use(express.json());
 
@@ -31,4 +30,3 @@ mongoose
 
 app.use("/api", userRoutes);
 app.use("/api", adminRoutes);
-
