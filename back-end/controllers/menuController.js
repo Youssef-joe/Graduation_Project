@@ -11,15 +11,15 @@ let addItem = async (req, res) => {
     }
 
     if (price < 0) {
-      return res.status(400).json({
+            return res.status(400).json({
         message: "Price cannot be negative",
       });
-    }
+        }
 
-    const newItem = new Menu({
+        const newItem = new Menu({
       title,
       description,
-      price,
+            price,
       category,
       imageSrc,
     });
@@ -31,7 +31,7 @@ let addItem = async (req, res) => {
     });
   } catch (error) {
     console.error("Error adding menu item:", error);
-    res.status(500).json({
+        res.status(500).json({
       message: "Failed to add menu item",
       error: error.message,
     });
@@ -55,7 +55,7 @@ let updateItem = async (req, res) => {
     if (description) item.description = description;
     if (price !== undefined) {
       if (price < 0) {
-        return res.status(400).json({
+            return res.status(400).json({
           message: "Price cannot be negative",
         });
       }
@@ -89,15 +89,15 @@ let deleteItem = async (req, res) => {
       res.status(404).json({
         message: "Menu item not found",
       });
-    }
+        }
 
-    res.status(200).json({
+        res.status(200).json({
       message: "Menu item deleted successfully",
       item: deletedItem,
     });
   } catch (error) {
     console.error("Error deleting menu item:", error);
-    res.status(500).json({
+        res.status(500).json({
       message: "Failed to delete menu item",
       error: error.message,
     });
@@ -126,7 +126,7 @@ let getMenuByCategory = async (req, res) => {
     res.status(200).json(menuItems);
   } catch (error) {
     console.error("Error fetching menu by category:", error);
-    res.status(500).json({
+            res.status(500).json({
       message: "Failed to fetch menu items",
       error: error.message,
     });
@@ -163,9 +163,9 @@ let toggleAvailability = async (req, res) => {
 };
 
 module.exports = {
-  addItem,
-  updateItem,
-  deleteItem,
+    addItem,
+    updateItem,
+    deleteItem,
   getMenu,
   getMenuByCategory,
   toggleAvailability,
